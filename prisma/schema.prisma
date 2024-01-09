@@ -7,23 +7,41 @@ generator client {
 
 // Just might change to postgresql :) (later)
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  name  String
+  id    String    @id @default(uuid())
+  email String  @unique
+  name  String  @unique
+  bio   String  @default("")
+  avatar String  @default("")   //Actually a URL
+  createdAt DateTime @default(now())
 
   password String
   salt     String
   token    token[]
+  pixelArt pixelArt[]
 }
 
 model token {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    String
+}
+
+model pixelArt {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  description String 
+  width     Int
+  height    Int
+  drawnPixels    String @default("[]")
+
+  public   Boolean @default(false)
 }

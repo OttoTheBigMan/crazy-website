@@ -5,7 +5,11 @@ import { fail, redirect } from "@sveltejs/kit";
 
 const prisma = new PrismaClient();
 
-export const load = (async () => {
+export const load = (async ({cookies}) => {
+    let username = cookies.get("username");
+    if(username){
+        throw redirect(303, "/")
+    }
     return {};
 }) satisfies PageServerLoad;
 
@@ -35,8 +39,7 @@ export const actions: Actions = {
         const token = await prisma.token.create({
             data: { userId: pUser.id },
         });
-        cookies.set("token_id", token.id, { secure: false });
-        cookies.set("username", email);
+        cookies.set("username", token.id, { secure: false });
         throw redirect(307, "/");
     }
 };
