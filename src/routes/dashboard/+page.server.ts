@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { PrismaClient } from '@prisma/client';
 
@@ -29,7 +29,21 @@ export const load = (async ({cookies}) => {
         throw redirect(303, "/login")
     }
     currentUserId = prismaToken.user.id;
-    return {};
+
+    //Find the users pixelarts:
+
+    let pixelarts = await prisma.pixelArt.findMany({where: {userId: currentUserId}, orderBy: {createdAt: "desc"}});
+    let pixelartList = pixelarts.map((pixelart) => {
+        return {
+            id: pixelart.id,
+            name: pixelart.title,
+            description: pixelart.description,
+            createdAt: pixelart.createdAt,
+            isFavorite: pixelart.favorite
+        }
+    })
+
+    return { pixelArtList: pixelartList };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
@@ -48,11 +62,7 @@ export const actions: Actions = {
         if(isNaN(width) || isNaN(height)){
             return fail(400, {error: "Please enter valid numbers, cuh."});
         }
-        const pixels = JSON.stringify(new Array(width * height).fill({
-            color: "",
-            x: 0,
-            y: 0
-        }));
+        const pixels = new Array(width * height).fill("#eeeeee");
         const pixelart = await prisma.pixelArt.create({data: {
             title: name,
             description: desc,
@@ -63,5 +73,57 @@ export const actions: Actions = {
         }});
 
         throw redirect(300, "/dashboard/" + pixelart.id);
+    },
+    deleteArt: async ({request}) => {
+        let data = await request.formData();
+        let id = data.get("id")?.toString();
+        if(!id){
+            return fail(400, {error: "No id sent"});
+        }
+        let pixelart = await prisma.pixelArt.findUnique({where: {id: id}});
+        if(!pixelart){
+            return fail(404, {error: "Pixelart not found"});
+        }
+        if(pixelart.userId !== currentUserId){
+            return fail(403, {error: "You do not have access to this pixelart"});
+        }
+        await prisma.pixelArt.delete({where: {id: id}});
+        
+        let pixelarts = await prisma.pixelArt.findMany({where: {userId: currentUserId}, orderBy: {createdAt: "desc"}});
+        let pixelartList = pixelarts.map((pixelart) => {
+            return {
+                id: pixelart.id,
+                name: pixelart.title,
+                description: pixelart.description,
+                createdAt: pixelart.createdAt,
+                isFavorite: pixelart.favorite
+            }
+        })
+        return { pixelArtList: pixelartList };
+    },
+    toggleFavorite: async ({ request }) => {
+        let data = await request.formData();
+        let id = data.get("id")?.toString();
+        if(!id){
+            throw error(400, "No id sent");
+        }
+        let pixelart = await prisma.pixelArt.findUnique({where: {id: id}});
+        if(!pixelart){
+            throw error(404, "Pixelart not found");
+        }
+        await prisma.pixelArt.update({where: {id: id}, data: {favorite: !pixelart.favorite}});
+        //Find the users pixelarts:
+
+        let pixelarts = await prisma.pixelArt.findMany({where: {userId: currentUserId}, orderBy: {createdAt: "desc"}});
+        let pixelartList = pixelarts.map((pixelart) => {
+            return {
+                id: pixelart.id,
+                name: pixelart.title,
+                description: pixelart.description,
+                createdAt: pixelart.createdAt,
+                isFavorite: pixelart.favorite
+            }
+        })
+        return { pixelArtList: pixelartList };
     }
 };

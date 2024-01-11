@@ -47,7 +47,7 @@ export const load = async ({ params, cookies }) => {
         createdAt: pixelartPrisma.createdAt,
         width: pixelartPrisma.width,
         height: pixelartPrisma.height,
-        pixels: JSON.parse(pixelartPrisma.drawnPixels),
+        pixels: pixelartPrisma.drawnPixels,
     }
 
     return { id: pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
@@ -56,12 +56,33 @@ export const load = async ({ params, cookies }) => {
 export const actions: Actions = {
     edit: async ({ request }) => {
         let data = await request.formData();
-        let newPixels = data.get("pixels");
-        if(!newPixels){
-            throw error(400, "No pixels sent");
+        // let newPixels = data.get("pixels")?.toString() ?? "";
+        // if(newPixels == ""){
+        //     throw error(400, "No pixels sent");
+        // }
+        // await prisma.pixelArt.update({where: {id: pixelartId}, data: {drawnPixels: newPixels.toString()}});
+        // return { pixels: newPixels };
+
+        let balls = data.get("index")?.toString();
+        let color = data.get("color")?.toString();
+        if(!balls || !color){
+            throw error(400, "What the heeeeelll");
         }
-        console.log(JSON.stringify(newPixels));
-        await prisma.pixelArt.update({where: {id: pixelartId}, data: {drawnPixels: JSON.stringify(newPixels)}});
-        return { pixels: newPixels };
+        let index = parseInt(balls);
+        if(isNaN(index)){
+            throw error(400, "Index is not a number");
+        }
+        let oldPixels = await prisma.pixelArt.findUnique({where: {id: pixelartId}, select: {drawnPixels: true}});
+        if(!oldPixels){
+            throw error(404, "Pixelart not found");
+        }
+        let pixels = oldPixels.drawnPixels;
+        pixels[index] = color;
+        await prisma.pixelArt.update({where: {id: pixelartId}, data: 
+            {
+                drawnPixels: pixels
+            }
+        });
+        return { pixels: pixels };
     }
 };

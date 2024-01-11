@@ -41,7 +41,8 @@ model pixelArt {
   description String 
   width     Int
   height    Int
-  drawnPixels    String @default("[]")
+  drawnPixels    String[] @default([])
 
   public   Boolean @default(false)
+  favorite Boolean @default(false)
 }
