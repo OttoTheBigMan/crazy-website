@@ -4,10 +4,10 @@ import { error, redirect, type Actions } from '@sveltejs/kit';
 
 const prisma = new PrismaClient();
 
-let pixelartId = ""
+export let _pixelartId = ""
 
 export const load = async ({ params, cookies }) => {
-    pixelartId = params.pixelart;
+    _pixelartId = params.pixelart;
     let token = cookies.get("username");
     if(!token){
         
@@ -31,7 +31,7 @@ export const load = async ({ params, cookies }) => {
         await prisma.token.delete({where: {id: token}});
         throw redirect(303, "/login")
     }
-    let pixelartPrisma = await prisma.pixelArt.findUnique({where: {id: pixelartId}});
+    let pixelartPrisma = await prisma.pixelArt.findUnique({where: {id: _pixelartId}});
     if(!pixelartPrisma){
         throw error(404, "Pixelart not found")
     }
@@ -50,7 +50,7 @@ export const load = async ({ params, cookies }) => {
         pixels: pixelartPrisma.drawnPixels,
     }
 
-    return { id: pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
+    return { id: _pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
 };
 
 export const actions: Actions = {
@@ -72,13 +72,13 @@ export const actions: Actions = {
         if(isNaN(index)){
             throw error(400, "Index is not a number");
         }
-        let oldPixels = await prisma.pixelArt.findUnique({where: {id: pixelartId}, select: {drawnPixels: true}});
+        let oldPixels = await prisma.pixelArt.findUnique({where: {id: _pixelartId}, select: {drawnPixels: true}});
         if(!oldPixels){
             throw error(404, "Pixelart not found");
         }
         let pixels = oldPixels.drawnPixels;
         pixels[index] = color;
-        await prisma.pixelArt.update({where: {id: pixelartId}, data: 
+        await prisma.pixelArt.update({where: {id: _pixelartId}, data: 
             {
                 drawnPixels: pixels
             }
@@ -86,3 +86,4 @@ export const actions: Actions = {
         return { pixels: pixels };
     }
 };
+

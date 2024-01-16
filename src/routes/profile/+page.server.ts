@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 export const load = (async ({cookies}) => {
     let userInfo : {id: string, name: string, avatar: string, bio: string, createdAt: Date} = {id: "", name: "", avatar: "", bio: "", createdAt: new Date()};
     let token = cookies.get("username");
+    if(!token) throw redirect(303, "/login");
     let prismaToken = await prisma.token.findUnique({where: {id: token}});
     if(prismaToken) {
         let user = await prisma.user.findUnique({where: {id: prismaToken.userId}});
-        if(user != null && user != undefined) {
+        if(user) {
             userInfo = {id: user.id, name: user.name, avatar: user.avatar, bio: user.bio, createdAt: user.createdAt};
         }
         else{

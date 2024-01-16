@@ -3,6 +3,8 @@
     import type { PageData } from './$types';
     
     export let data: PageData;
+    let visible = false;
+    let currentDeleteId = "";
     let pixelArts = data.pixelArtList;
     $ : {
         pixelArts = data.pixelArtList;
@@ -33,7 +35,7 @@
                     <button on:click={toggleFilter} class="btn-icon variant-ghost-tertiary"><i class="fa-{filterFavorites ? "solid" : "regular"} fa-star"></i></button>
                 </div>
             {/if}
-            {#each pixelArts as art, i}
+            {#each pixelArts as art}
                 {#if art.isFavorite || !filterFavorites}
                     <div class="flex justify-between p-2 items-center rounded variant-ghost-secondary w-full">
                         <div class="flex gap-3">
@@ -44,10 +46,7 @@
                             </form>
                         </div>
                         <h4 class="h4">{art.name}</h4>
-                        <form action="?/deleteArt" method="post" use:enhance>
-                            <input type="hidden" value={art.id} name="id">
-                            <button class="btn-icon variant-ghost-tertiary"><i class="fa-solid fa-trash"></i></button>
-                        </form>
+                        <button class="btn-icon variant-ghost-tertiary" on:click={() => {visible = true; currentDeleteId = art.id}}><i class="fa-solid fa-trash"></i></button>
                     </div>
                 {/if}
             {/each}
@@ -56,4 +55,23 @@
             {/if}
         </div>
     </div>
+    {#if visible}
+        <aside class="alert variant-filled-warning" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <!-- Icon -->
+            <div><i class="fa-solid fa-triangle-exclamation fa-2x"></i></div>
+            <!-- Message -->
+            <div class="alert-message">
+                <h3 class="h3">The danger zone</h3>
+                <p>Are you sure you want to delete this fine piece of art?</p>
+            </div>
+            <!-- Actions -->
+            <div class="alert-actions">
+                <form action="?/deleteArt" method="post" use:enhance on:submit={() => visible = false}>
+                    <input type="hidden" value={currentDeleteId} name="id">
+                    <button class="btn variant-ghost-tertiary">Confirm</button>
+                </form>
+                <button class="btn-icon variant-ghost-tertiary" on:click={() => visible = false}><i class="fa-regular fa-circle-xmark"></i></button>
+            </div>
+        </aside>
+    {/if}
 </main>

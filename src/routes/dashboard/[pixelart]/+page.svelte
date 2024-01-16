@@ -8,7 +8,15 @@
     let saveButton: HTMLButtonElement;
     let currentColor = "#000000";
 
-    // Update pixels when data.pixels changes
+    // Update pixels live
+    onMount(() => {
+        const interval = setInterval(() => {
+            invalidateAll();
+        }, 1000);
+        return () => clearInterval(interval);
+    });
+
+    
 
     function handleColorChange(event: any) {
         currentColor = event.target.value;
