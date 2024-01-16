@@ -4,28 +4,25 @@
     import type { PageData } from './$types';
     import { invalidate, invalidateAll } from '$app/navigation';
     export let data: PageData;
-    let pixels: string[] = data.pixels;
-    let saveButton: HTMLButtonElement;
+    $: pixels = data.pixels;
+    let updateButton: HTMLButtonElement;
     let currentColor = "#000000";
-
+    let interval : NodeJS.Timeout;
     // Update pixels live
     onMount(() => {
-        const interval = setInterval(() => {
-            invalidateAll();
+        interval = setInterval(() => {
+            updateButton.click();
         }, 1000);
-        return () => clearInterval(interval);
+        
+    });
+    onDestroy(() => {
+        clearInterval(interval);
     });
 
     
 
     function handleColorChange(event: any) {
         currentColor = event.target.value;
-    }
-
-    function YepCock() {
-        setTimeout(() => {
-            saveButton.click();
-        }, 10);
     }
     
     // function EditPixel(event : MouseEvent, index : number){
@@ -70,8 +67,7 @@
             <p>{data.description}</p>
         </div>
     </div>
-    <!-- <form action="?/edit" method="post" use:enhance class="w-8 h-8">
-        <input type="hidden" name="pixels" value={pixString}>
-        <button class="hidden" type="submit" bind:this={saveButton}/>
-    </form> -->
+    <form action="?/update" method="post" use:enhance class="w-8 h-8">
+        <button class="hidden" type="submit" bind:this={updateButton}/>
+    </form>
 </main>

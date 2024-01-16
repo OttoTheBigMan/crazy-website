@@ -35,9 +35,9 @@ export const load = async ({ params, cookies }) => {
     if(!pixelartPrisma){
         throw error(404, "Pixelart not found")
     }
-    if(pixelartPrisma.userId !== prismaToken.user.id){
-        throw error(403, "You do not have access to this pixelart")
-    }
+    // if(pixelartPrisma.userId !== prismaToken.user.id){
+    //     throw error(403, "You do not have access to this pixelart")
+    // }
     //TODO: Check if user has access to pixelart
     //Load the pixelart
     let info = {
@@ -84,6 +84,17 @@ export const actions: Actions = {
             }
         });
         return { pixels: pixels };
+    },
+    update: async ({  }) => {
+        console.log("update the thing")
+        let yep = await prisma.pixelArt.findUnique({where: {id: _pixelartId}, select: {drawnPixels: true}});
+        if(yep){
+            let newPixels = yep.drawnPixels;
+            return { pixels: newPixels };
+        }
+        else{
+            throw error(404, "Pixelart not found");
+        }
     }
 };
 
