@@ -39,7 +39,7 @@ export const load = (async ({cookies}) => {
             name: pixelart.title,
             description: pixelart.description,
             createdAt: pixelart.createdAt,
-            isFavorite: pixelart.favorite
+            isFavorite: pixelart.favoritedBy.includes(currentUserId)
         }
     })
 
@@ -62,7 +62,8 @@ export const actions: Actions = {
         if(isNaN(width) || isNaN(height)){
             return fail(400, {error: "Please enter valid numbers, cuh."});
         }
-        const pixels = new Array(width * height).fill("#eeeeee");
+        const pixels = JSON.stringify(new Array(width * height).fill({color: "eeeeee", author: ""}))
+        console.log(pixels)
         const pixelart = await prisma.pixelArt.create({data: {
             title: name,
             description: desc,
@@ -96,7 +97,7 @@ export const actions: Actions = {
                 name: pixelart.title,
                 description: pixelart.description,
                 createdAt: pixelart.createdAt,
-                isFavorite: pixelart.favorite
+                isFavorite: pixelart.favoritedBy.includes(currentUserId)
             }
         })
         return { pixelArtList: pixelartList };
@@ -107,11 +108,17 @@ export const actions: Actions = {
         if(!id){
             throw error(400, "No id sent");
         }
+        let isFav = await IsFavorite(id, currentUserId);
         let pixelart = await prisma.pixelArt.findUnique({where: {id: id}});
         if(!pixelart){
             throw error(404, "Pixelart not found");
         }
-        await prisma.pixelArt.update({where: {id: id}, data: {favorite: !pixelart.favorite}});
+        if(isFav){
+            await prisma.pixelArt.update({where: {id: id}, data: {favoritedBy: {set: pixelart.favoritedBy.filter((id) => id !== currentUserId)}}});
+        }
+        else {
+            await prisma.pixelArt.update({where: {id: id}, data: {favoritedBy: {push: currentUserId}}});
+        }
         //Find the users pixelarts:
 
         let pixelarts = await prisma.pixelArt.findMany({where: {userId: currentUserId}, orderBy: {createdAt: "desc"}});
@@ -121,9 +128,24 @@ export const actions: Actions = {
                 name: pixelart.title,
                 description: pixelart.description,
                 createdAt: pixelart.createdAt,
-                isFavorite: pixelart.favorite
+                isFavorite: pixelart.favoritedBy.includes(currentUserId)
             }
         })
         return { pixelArtList: pixelartList };
     }
 };
+
+async function IsFavorite(pixelart: string, userId: string){
+    let art = await prisma.pixelArt.findUnique({where: {id: pixelart}});
+    if(art){
+        if(art.favoritedBy.includes(userId)){
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        throw error(404, "Pixelart not found");
+    }
+}

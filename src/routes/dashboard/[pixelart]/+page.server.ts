@@ -5,6 +5,7 @@ import { error, redirect, type Actions } from '@sveltejs/kit';
 const prisma = new PrismaClient();
 
 export let _pixelartId = ""
+let currentUserName = ""
 
 export const load = async ({ params, cookies }) => {
     _pixelartId = params.pixelart;
@@ -31,6 +32,7 @@ export const load = async ({ params, cookies }) => {
         await prisma.token.delete({where: {id: token}});
         throw redirect(303, "/login")
     }
+    currentUserName = prismaToken.user.name;
     let pixelartPrisma = await prisma.pixelArt.findUnique({where: {id: _pixelartId}});
     if(!pixelartPrisma){
         throw error(404, "Pixelart not found")
@@ -47,7 +49,7 @@ export const load = async ({ params, cookies }) => {
         createdAt: pixelartPrisma.createdAt,
         width: pixelartPrisma.width,
         height: pixelartPrisma.height,
-        pixels: pixelartPrisma.drawnPixels,
+        pixels: JSON.parse(pixelartPrisma.drawnPixels),
     }
 
     return { id: _pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
@@ -65,6 +67,7 @@ export const actions: Actions = {
 
         let balls = data.get("index")?.toString();
         let color = data.get("color")?.toString();
+        
         if(!balls || !color){
             throw error(400, "What the heeeeelll");
         }
@@ -76,20 +79,19 @@ export const actions: Actions = {
         if(!oldPixels){
             throw error(404, "Pixelart not found");
         }
-        let pixels = oldPixels.drawnPixels;
-        pixels[index] = color;
+        let pixels = JSON.parse(oldPixels.drawnPixels);
+        pixels[index] = {color: color, author: currentUserName};
         await prisma.pixelArt.update({where: {id: _pixelartId}, data: 
             {
-                drawnPixels: pixels
+                drawnPixels: JSON.stringify(pixels)
             }
         });
         return { pixels: pixels };
     },
     update: async ({  }) => {
-        console.log("update the thing")
         let yep = await prisma.pixelArt.findUnique({where: {id: _pixelartId}, select: {drawnPixels: true}});
         if(yep){
-            let newPixels = yep.drawnPixels;
+            let newPixels = JSON.parse(yep.drawnPixels);
             return { pixels: newPixels };
         }
         else{

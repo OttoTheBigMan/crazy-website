@@ -38,25 +38,29 @@
 
     <div class="flex justify-evenly w-full">
         <div class="variant-ghost-primary flex flex-col items-center p-3 rounded gap-2">
-            <input type="color" bind:value={currentColor} on:change={handleColorChange} />
-            <button class="btn-icon variant-ghost-secondary" on:click={() => currentColor=""}><i class="fa-solid fa-eraser" style="color: {currentColor == "" ? "black" : "white"}"></i></button>
+            <button class="btn-icon variant-ghost-secondary"><input type="color" class="input" bind:value={currentColor} on:change={handleColorChange}/></button>
+            
         </div>
-        <div class="variant-ghost-primary rounded-2xl grid justify-center items-center w-fit p-5" style="grid-template-columns: repeat({data.width}, auto); grid-template-rows: repeat({data.height}, auto)">
+        <div class="variant-ghost-primary rounded-2xl grid justify-center items-center p-5 " style="grid-template-columns: repeat({data.width}, auto); grid-template-rows: repeat({data.height}, auto)">
             {#each pixels as pixel, i}
                 <form action="?/edit" method="post" use:enhance class="w-8 h-8">
                     <input type="hidden" value="{currentColor}" name="color">
                     <input type="hidden" value="{i}" name="index">
+                    <input type="hidden" name="author" value={data.user}>
                     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                    <button class="w-8 h-8 hover:opacity-75" style="background-color: {pixel == '' ? '#eeeeee' : pixel}" on:mouseover={(e) => {
+                    <button class="hover:opacity-75 w-full h-full border {pixel.author == data.user ? "border-red-500" : ""}" style="background-color: {pixel.color == "" ? "#eeeeee" : pixel.color}" on:mouseover={(e) => {
+                        
                         if(e.buttons != 1) return;
-                        pixels[i] = currentColor;
+                        
+                        pixels[i].color = currentColor;
                         pixels = pixels;
                         e.currentTarget.click();                 
                     }} on:mousedown={(e) => {
                         if(e.buttons != 1) return;
-                        pixels[i] = currentColor;
+                        
+                        pixels[i].color = currentColor;
                         pixels = pixels; 
-                        e.currentTarget.click();                 
+                        e.currentTarget.click();
                     }}/>
                     <!-- on:mouseup={() => YepCock()} (Inne i knappen ofc) -->
                 </form>
@@ -67,6 +71,7 @@
             <p>{data.description}</p>
         </div>
     </div>
+    <a href="/dashboard" class="btn-icon variant-ghost-secondary absolute top-[15px] left-[15px]"><i class="fa-solid fa-arrow-left"></i></a>
     <form action="?/update" method="post" use:enhance class="w-8 h-8">
         <button class="hidden" type="submit" bind:this={updateButton}/>
     </form>

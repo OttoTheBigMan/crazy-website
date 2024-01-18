@@ -55,6 +55,7 @@
             {/if}
         </div>
     </div>
+    <!-- Popup when delete -->
     {#if visible}
         <aside class="alert variant-filled-warning" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
             <!-- Icon -->
@@ -68,9 +69,9 @@
             <div class="alert-actions">
                 <form action="?/deleteArt" method="post" use:enhance on:submit={() => visible = false}>
                     <input type="hidden" value={currentDeleteId} name="id">
-                    <button class="btn variant-ghost-tertiary">Confirm</button>
+                    <button class="btn variant-filled">Confirm</button>
                 </form>
-                <button class="btn-icon variant-ghost-tertiary" on:click={() => visible = false}><i class="fa-regular fa-circle-xmark"></i></button>
+                <button class="btn-icon variant-filled" on:click={() => visible = false}><i class="fa-solid fa-xmark"></i></button>
             </div>
         </aside>
     {/if}
