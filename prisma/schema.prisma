@@ -7,7 +7,7 @@ generator client {
 
 // Just might change to postgresql :) (later)
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -44,5 +44,5 @@ model pixelArt {
   drawnPixels    String @default("")
 
   public   Boolean @default(false)
-  favoritedBy String[] @default([])
+  favoritedBy String @default("[]")
 }

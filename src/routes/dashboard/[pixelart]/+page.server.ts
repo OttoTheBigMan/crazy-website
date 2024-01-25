@@ -5,7 +5,6 @@ import { error, redirect, type Actions } from '@sveltejs/kit';
 const prisma = new PrismaClient();
 
 export let _pixelartId = ""
-let currentUserName = ""
 
 export const load = async ({ params, cookies }) => {
     _pixelartId = params.pixelart;
@@ -32,11 +31,11 @@ export const load = async ({ params, cookies }) => {
         await prisma.token.delete({where: {id: token}});
         throw redirect(303, "/login")
     }
-    currentUserName = prismaToken.user.name;
     let pixelartPrisma = await prisma.pixelArt.findUnique({where: {id: _pixelartId}});
     if(!pixelartPrisma){
         throw error(404, "Pixelart not found")
     }
+    
     // if(pixelartPrisma.userId !== prismaToken.user.id){
     //     throw error(403, "You do not have access to this pixelart")
     // }
@@ -67,8 +66,9 @@ export const actions: Actions = {
 
         let balls = data.get("index")?.toString();
         let color = data.get("color")?.toString();
+        let currentUserName = data.get("userName")?.toString();
         
-        if(!balls || !color){
+        if(!balls || !currentUserName){
             throw error(400, "What the heeeeelll");
         }
         let index = parseInt(balls);
@@ -88,8 +88,10 @@ export const actions: Actions = {
         });
         return { pixels: pixels };
     },
-    update: async ({  }) => {
+    update: async ({ request }) => {
         let yep = await prisma.pixelArt.findUnique({where: {id: _pixelartId}, select: {drawnPixels: true}});
+        
+        
         if(yep){
             let newPixels = JSON.parse(yep.drawnPixels);
             return { pixels: newPixels };

@@ -2,7 +2,6 @@
     import { enhance } from '$app/forms';
     import { onDestroy, onMount } from 'svelte';
     import type { PageData } from './$types';
-    import { invalidate, invalidateAll } from '$app/navigation';
     export let data: PageData;
     $: pixels = data.pixels;
     let updateButton: HTMLButtonElement;
@@ -12,19 +11,38 @@
     onMount(() => {
         interval = setInterval(() => {
             updateButton.click();
-        }, 1000);
+        }, 50);
         
     });
     onDestroy(() => {
         clearInterval(interval);
     });
+    const pixelArtColors = [
+        "#000000", // Black
+        "#FFFFFF", // White
+        "#FF0000", // Red
+        "#0000FF", // Blue
+        "#00FF00", // Green
+        "#FFFF00", // Yellow
+        "#A52A2A", // Brown
+        "#808080"  // Gray
+    ];
 
     
 
     function handleColorChange(event: any) {
         currentColor = event.target.value;
     }
-    
+    let prevColor = currentColor;
+    let colorInput : HTMLInputElement;
+    function ToggleEraser(){
+        if(currentColor == ""){
+            currentColor = prevColor;
+        }else{
+            prevColor = currentColor;
+            currentColor = "";
+        }
+    }
     // function EditPixel(event : MouseEvent, index : number){
     //     if(event.buttons != 1) return;
     //     pixels = pixels;
@@ -37,18 +55,25 @@
     <h2 class="h2">Size: {data.width}x{data.height}</h2>
 
     <div class="flex justify-evenly w-full">
-        <div class="variant-ghost-primary flex flex-col items-center p-3 rounded gap-2">
-            <button class="btn-icon variant-ghost-secondary"><input type="color" class="input" bind:value={currentColor} on:change={handleColorChange}/></button>
+        <div class="variant-ghost-primary flex flex-col items-center justify-evenly p-3 rounded gap-2">
+            <input type="color" bind:value={currentColor} on:change={handleColorChange} bind:this={colorInput} class="hidden"/>
+            <button class="btn-icon variant-ghost-secondary" on:click={() => colorInput.click()}>
+                <i class="fa-solid fa-palette" style="color: {currentColor}"></i>
+            </button>
             
+            {#each pixelArtColors as color}
+                <button class="btn-icon variant-ghost-secondary" on:click={() => currentColor=color}><i class="fa-solid fa-droplet" style="color: {color}"></i></button>
+            {/each}
+            <button class="btn-icon variant-ghost-secondary" on:click={() => ToggleEraser()}><i class="fa-solid fa-eraser" style="color: {currentColor=="" ? "black" : "white"}"></i></button>
         </div>
-        <div class="variant-ghost-primary rounded-2xl grid justify-center items-center p-5 " style="grid-template-columns: repeat({data.width}, auto); grid-template-rows: repeat({data.height}, auto)">
+        <div class="variant-ghost-primary rounded grid justify-center items-center p-2 " style="grid-template-columns: repeat({data.width}, auto); grid-template-rows: repeat({data.height}, auto)">
             {#each pixels as pixel, i}
                 <form action="?/edit" method="post" use:enhance class="w-8 h-8">
                     <input type="hidden" value="{currentColor}" name="color">
                     <input type="hidden" value="{i}" name="index">
-                    <input type="hidden" name="author" value={data.user}>
+                    <input type="hidden" name="userName" value={data.user}>
                     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                    <button class="hover:opacity-75 w-full h-full border {pixel.author == data.user ? "border-red-500" : ""}" style="background-color: {pixel.color == "" ? "#eeeeee" : pixel.color}" on:mouseover={(e) => {
+                    <button class="hover:opacity-75 w-full h-full pixel" style="background-color: {pixel.color}" on:mouseover={(e) => {
                         
                         if(e.buttons != 1) return;
                         
@@ -61,7 +86,9 @@
                         pixels[i].color = currentColor;
                         pixels = pixels; 
                         e.currentTarget.click();
-                    }}/>
+                    }}
+                    
+                    />
                     <!-- on:mouseup={() => YepCock()} (Inne i knappen ofc) -->
                 </form>
             {/each}
@@ -73,6 +100,14 @@
     </div>
     <a href="/dashboard" class="btn-icon variant-ghost-secondary absolute top-[15px] left-[15px]"><i class="fa-solid fa-arrow-left"></i></a>
     <form action="?/update" method="post" use:enhance class="w-8 h-8">
+        <input type="hidden" name="oldPixels" value={pixels}>
         <button class="hidden" type="submit" bind:this={updateButton}/>
     </form>
 </main>
+
+<style>
+    .pixel {
+        transition: 0.1s;
+        transition-property: background-color;
+    }
+</style>
