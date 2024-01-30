@@ -1,17 +1,43 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { onDestroy, onMount } from 'svelte';
+    import {afterUpdate} from 'svelte';
     import type { PageData } from './$types';
+    import { invalidateAll } from '$app/navigation';
     export let data: PageData;
+    let oldPixels = JSON.parse(JSON.stringify(data.pixels));
+    let pixels = data.pixels;
     $: pixels = data.pixels;
+    
+    
+
+    let indexes : boolean[] = []
+    let glowInterval : NodeJS.Timeout;
+    afterUpdate(() => {
+        Glow();
+    })
+    function Glow(){
+        // Get all the indexes that differ between oldpixels and pixels
+        let temp = pixels.map((pixel : any, i : number) => {
+            return pixel.color != oldPixels[i].color && pixel.author != data.user;
+        }, []);
+        oldPixels = pixels;
+        //return if the array only contains false
+        if(!temp.includes(true)) return;
+        clearInterval(glowInterval);
+        indexes = temp;
+        glowInterval = setInterval(() => {
+            indexes = [];
+        }, 250);
+    }
     let updateButton: HTMLButtonElement;
     let currentColor = "#000000";
     let interval : NodeJS.Timeout;
     // Update pixels live
     onMount(() => {
         interval = setInterval(() => {
-            updateButton.click();
-        }, 50);
+            invalidateAll();
+        }, 1000);
         
     });
     onDestroy(() => {
@@ -73,7 +99,7 @@
                     <input type="hidden" value="{i}" name="index">
                     <input type="hidden" name="userName" value={data.user}>
                     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                    <button class="hover:opacity-75 w-full h-full pixel" style="background-color: {pixel.color}" on:mouseover={(e) => {
+                    <button class="hover:opacity-75 w-full h-full pixel {indexes[i] ? "border border-red-500" : ""}" style="background-color: {pixel.color}" on:mouseover={(e) => {
                         
                         if(e.buttons != 1) return;
                         
@@ -99,15 +125,11 @@
         </div>
     </div>
     <a href="/dashboard" class="btn-icon variant-ghost-secondary absolute top-[15px] left-[15px]"><i class="fa-solid fa-arrow-left"></i></a>
-    <form action="?/update" method="post" use:enhance class="w-8 h-8">
-        <input type="hidden" name="oldPixels" value={pixels}>
-        <button class="hidden" type="submit" bind:this={updateButton}/>
-    </form>
 </main>
 
 <style>
     .pixel {
         transition: 0.1s;
-        transition-property: background-color;
+        transition-property: border;
     }
 </style>

@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { PrismaClient } from '@prisma/client';
 
@@ -24,7 +24,7 @@ export const _findCurrentUser = async (token : string) => {
         where: { id: token },
         include: { user: { select: { name: true, id: true } } }
     });
-    if(!prismaToken) throw error(500, "User not found");
+    if(!prismaToken) return "";
 
-    return prismaToken?.user;
+    return prismaToken.user;
 };
