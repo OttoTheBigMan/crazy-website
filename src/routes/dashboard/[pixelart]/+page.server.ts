@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import type { PageServerLoad } from './$types';
-import { error, redirect, type Actions } from '@sveltejs/kit';
+import { _findCurrentUser } from '../../+layout.server';
+import { error, redirect, type Actions, fail } from '@sveltejs/kit';
 
 const prisma = new PrismaClient();
 
@@ -50,8 +51,9 @@ export const load = async ({ params, cookies }) => {
         height: pixelartPrisma.height,
         pixels: JSON.parse(pixelartPrisma.drawnPixels),
     }
+    let pubclicity = pixelartPrisma.public;
 
-    return { id: _pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
+    return { isPublic: pubclicity, id: _pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
 };
 
 export const actions: Actions = {
@@ -99,6 +101,23 @@ export const actions: Actions = {
         else{
             throw error(404, "Pixelart not found");
         }
+    },
+    togglePublic: async ({ request, cookies }) => {
+
+        let data = await request.formData();
+        let id = data.get("id")?.toString() ?? "";
+        if (id == "") {
+            throw error(400, "Id not found :(");
+        }
+        let pub = await prisma.pixelArt.findUnique({ where: { id: _pixelartId }, select: { public: true, userId: true } });
+        if(!pub){
+            throw error(404, "Pixelart not found");
+        }
+        let currentUser = await _findCurrentUser(cookies.get("username") ?? "");
+        if(currentUser.id !== pub.userId){
+            return fail(400, {message: "You are not the owner of this pixelart."})
+        }
+        await prisma.pixelArt.update({ where: { id: _pixelartId }, data: { public: !pub.public } });
+        return { isPublic: !pub.public };
     }
 };
-

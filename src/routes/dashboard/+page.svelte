@@ -47,9 +47,9 @@
                         </div>
                         <h4 class="h4">{art.name}</h4>
                         <div class="flex gap-3 items-center">
-                            {#if art.userInfo.id != data.currentUser.id}
+                            <!-- {#if art.userInfo.id != data.currentUser.id}
                                 <i class="fa-solid fa-share-nodes fa-2x"></i>
-                            {/if}
+                            {/if} -->
                             
                             <button class="btn-icon variant-ghost-tertiary" on:click={() => {visible = true; currentDeleteId = art.id}}><i class="fa-solid fa-trash"></i></button>
                         </div>

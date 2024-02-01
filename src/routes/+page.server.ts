@@ -29,7 +29,23 @@ export const load = (async ({ cookies }) => {
             loggedIn = true;
         }
     }
-
+    //Get the public pixelarts:
+    let publicArts = await prisma.pixelArt.findMany({
+        where: {public: true},
+        include: {user: {select: {name: true, id: true}}}
+    });
+    let artList = publicArts.map((art) => {
+        let fav = false;
+        if(prismaToken && cookies.get("username")){
+            fav = art.favoritedBy.includes(prismaToken.user.id)
+        }
+        return {
+            id: art.id, 
+            name: art.title, 
+            user: art.user.name, 
+            isFav: fav
+        }
+    });
     
-    return { userExists: loggedIn };
+    return { userExists: loggedIn, arts: artList == undefined ? [] : artList };
 }) satisfies PageServerLoad;

@@ -24,7 +24,7 @@ export const _findCurrentUser = async (token : string) => {
         where: { id: token },
         include: { user: { select: { name: true, id: true } } }
     });
-    if(!prismaToken) return "";
+    if(!prismaToken) return {id: "", name: ""};
 
     return prismaToken.user;
 };
