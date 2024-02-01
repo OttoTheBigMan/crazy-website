@@ -1,7 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import {PrismaClient} from "@prisma/client"
 import type { Actions, PageServerLoad } from './$types';
-import * as crypto from "crypto";
+
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
