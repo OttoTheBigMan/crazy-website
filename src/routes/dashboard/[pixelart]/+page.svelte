@@ -39,7 +39,7 @@
     onMount(() => {
         interval = setInterval(() => {
             invalidateAll();
-        }, 500);
+        }, 1500);
         pixelSize = CalculatePixelSize();
         console.log(pixelSize);
         pixels = pixels;
