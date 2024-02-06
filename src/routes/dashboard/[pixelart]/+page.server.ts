@@ -40,7 +40,6 @@ export const load = async ({ params, cookies }) => {
     // if(pixelartPrisma.userId !== prismaToken.user.id){
     //     throw error(403, "You do not have access to this pixelart")
     // }
-    //TODO: Check if user has access to pixelart
     //Load the pixelart
     let info = {
         name: pixelartPrisma.title,
@@ -52,6 +51,10 @@ export const load = async ({ params, cookies }) => {
         pixels: JSON.parse(pixelartPrisma.drawnPixels),
     }
     let pubclicity = pixelartPrisma.public;
+
+    if(!pubclicity && prismaToken.user.id !== pixelartPrisma.userId){
+        throw error(403, "You do not have access to this pixelart")
+    }
 
     return { isPublic: pubclicity, id: _pixelartId, name: info.name, description: info.description, createdAt: info.createdAt, width: info.width, height: info.height, pixels: info.pixels, user: prismaToken.user.name };
 };
